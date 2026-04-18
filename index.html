@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stream Loop</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            overflow: hidden;
+            background-color: black;
+        }
+        body, html {
+            width: 100%;
+            height: 100%;
+        }
+        video {
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover; /* Esto hace que el video llene toda la pantalla sin bordes negros */
+        }
+    </style>
+</head>
+<body>
+
+    <video id="loopVideo" autoplay loop muted playsinline>
+        <source src="Recopilación1.mp4" type="video/mp4">
+        Tu navegador no soporta videos.
+    </video>
+
+    <script>
+        // Intento de forzar el autoplay en móviles
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const video = document.getElementById('loopVideo');
+            video.play().catch(error => {
+                console.log("El autoplay necesita interacción o estar silenciado.");
+            });
+        });
+    </script>
+</body>
+</html>
