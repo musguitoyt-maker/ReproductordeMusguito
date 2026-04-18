@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stream Loop Full Audio</title>
+    <title>Audio Web Directo</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; overflow: hidden; background-color: black; }
         body, html { width: 100%; height: 100%; }
@@ -19,26 +19,22 @@
     <script>
         const video = document.getElementById('loopVideo');
 
-        // Intento de reproducir con audio al cargar
-        window.addEventListener('load', () => {
+        // Intentar arrancar con audio
+        window.onload = () => {
             video.play().catch(() => {
-                // Si el navegador bloquea el audio, lo silenciamos un segundo para que arranque
-                // y luego intentamos activar el sonido tras un instante.
+                // Si falla por bloqueo de audio, lo arranca mudo y lo intenta activar
                 video.muted = true;
                 video.play();
-                
-                setTimeout(() => {
-                    video.muted = false;
-                }, 1000);
+                console.log("Audio esperando interacción");
             });
-        });
+        };
 
-        // Truco extra: si tocas cualquier parte de la pantalla en PRISM, el audio se activa
+        // Al tocar cualquier parte de la pantalla de PRISM, se activará el audio de la web
         document.body.addEventListener('click', () => {
             video.muted = false;
+            video.volume = 1.0;
             video.play();
         });
     </script>
 </body>
 </html>
-
