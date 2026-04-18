@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Audio Force Musguito</title>
+    <title>SISTEMA OPERACIÓN 100K</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; overflow: hidden; background-color: black; }
         body, html { width: 100%; height: 100%; }
@@ -11,27 +11,42 @@
     </style>
 </head>
 <body>
-    <video id="loopVideo" autoplay loop muted playsinline>
+
+    <video id="loopVideo" autoplay loop playsinline>
         <source src="https://www.dropbox.com/scl/fi/uq6r5hjpeefwlg0qqj3e0/lv_0_20260417155001.mp4?rlkey=4lg4kf0ut0en9i24nm9qdo79u&st=s8le6pmo&raw=1" type="video/mp4">
     </video>
 
     <script>
         const video = document.getElementById('loopVideo');
 
-        // Función que intenta quitar el mute cada medio segundo
-        const tryUnmute = setInterval(() => {
+        // FUERZA BRUTA DE AUDIO
+        function activarAudio() {
             video.muted = false;
             video.volume = 1.0;
-            
-            // Si el audio se activa (el navegador lo permite), dejamos de intentar
-            if (video.muted === false) {
-                clearInterval(tryUnmute);
-                console.log("Audio desbloqueado");
-            }
-        }, 500);
+            let playPromise = video.play();
 
-        // Por si acaso, intentamos reproducir de nuevo al cargar
-        window.onload = () => { video.play(); };
+            if (playPromise !== undefined) {
+                playPromise.then(_ => {
+                    console.log("LOGRADO");
+                }).catch(error => {
+                    // Si falla, lo silencia y lo vuelve a intentar en 100ms
+                    video.muted = true;
+                    video.play();
+                    setTimeout(() => { activarAudio(); }, 100);
+                });
+            }
+        }
+
+        // Intento de arranque agresivo
+        window.addEventListener('DOMContentLoaded', activarAudio);
+        window.addEventListener('load', activarAudio);
+        
+        // El truco final: intentar desmutear cada vez que el video hace loop
+        video.onplay = () => {
+            setTimeout(() => { 
+                video.muted = false; 
+            }, 500);
+        };
     </script>
 </body>
 </html>
