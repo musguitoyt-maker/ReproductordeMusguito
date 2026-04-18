@@ -3,41 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stream Loop Musguito</title>
+    <title>Stream Loop Full Audio</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            overflow: hidden;
-            background-color: black;
-        }
-        body, html {
-            width: 100%;
-            height: 100%;
-        }
-        video {
-            width: 100vw;
-            height: 100vh;
-            object-fit: cover; /* Llena toda la pantalla de PRISM sin dejar bordes */
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; overflow: hidden; background-color: black; }
+        body, html { width: 100%; height: 100%; }
+        video { width: 100vw; height: 100vh; object-fit: cover; }
     </style>
 </head>
 <body>
 
-    <video id="loopVideo" autoplay loop muted playsinline>
+    <video id="loopVideo" autoplay loop playsinline>
         <source src="https://www.dropbox.com/scl/fi/uq6r5hjpeefwlg0qqj3e0/lv_0_20260417155001.mp4?rlkey=4lg4kf0ut0en9i24nm9qdo79u&st=s8le6pmo&raw=1" type="video/mp4">
-        Tu navegador no soporta videos.
     </video>
 
     <script>
-        // Forzar la reproducción automática al cargar
-        window.onload = function() {
-            var video = document.getElementById('loopVideo');
-            video.play().catch(function(error) {
-                console.log("Autoplay bloqueado, intentando de nuevo...");
+        const video = document.getElementById('loopVideo');
+
+        // Intento de reproducir con audio al cargar
+        window.addEventListener('load', () => {
+            video.play().catch(() => {
+                // Si el navegador bloquea el audio, lo silenciamos un segundo para que arranque
+                // y luego intentamos activar el sonido tras un instante.
+                video.muted = true;
+                video.play();
+                
+                setTimeout(() => {
+                    video.muted = false;
+                }, 1000);
             });
-        };
+        });
+
+        // Truco extra: si tocas cualquier parte de la pantalla en PRISM, el audio se activa
+        document.body.addEventListener('click', () => {
+            video.muted = false;
+            video.play();
+        });
     </script>
 </body>
 </html>
+
