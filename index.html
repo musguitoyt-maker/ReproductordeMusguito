@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stream Loop</title>
+    <title>Stream Loop Musguito</title>
     <style>
         * {
             margin: 0;
@@ -19,25 +19,25 @@
         video {
             width: 100vw;
             height: 100vh;
-            object-fit: cover; /* Esto hace que el video llene toda la pantalla sin bordes negros */
+            object-fit: cover; /* Llena toda la pantalla de PRISM sin dejar bordes */
         }
     </style>
 </head>
 <body>
 
     <video id="loopVideo" autoplay loop muted playsinline>
-        <source src="Recopilación1.mp4" type="video/mp4">
+        <source src="https://www.dropbox.com/scl/fi/uq6r5hjpeefwlg0qqj3e0/lv_0_20260417155001.mp4?rlkey=4lg4kf0ut0en9i24nm9qdo79u&st=s8le6pmo&raw=1" type="video/mp4">
         Tu navegador no soporta videos.
     </video>
 
     <script>
-        // Intento de forzar el autoplay en móviles
-        document.addEventListener('DOMContentLoaded', (event) => {
-            const video = document.getElementById('loopVideo');
-            video.play().catch(error => {
-                console.log("El autoplay necesita interacción o estar silenciado.");
+        // Forzar la reproducción automática al cargar
+        window.onload = function() {
+            var video = document.getElementById('loopVideo');
+            video.play().catch(function(error) {
+                console.log("Autoplay bloqueado, intentando de nuevo...");
             });
-        });
+        };
     </script>
 </body>
 </html>
