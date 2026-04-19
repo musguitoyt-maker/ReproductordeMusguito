@@ -2,19 +2,17 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Último Suscriptor MusguitoMC</title>
     <style>
-        /* Estilo para fondo blanco puro y centrado absoluto */
         body {
             margin: 0;
             padding: 0;
             display: flex;
-            justify-content: center; /* Centrado horizontal */
-            align-items: center; /* Centrado vertical */
-            height: 100vh; /* Altura de toda la ventana */
-            background-color: #ffffff; /* Fondo blanco puro */
-            font-family: 'Arial Black', 'Helvetica Bold', sans-serif; /* Letras gruesas y claras */
-            overflow: hidden; /* Sin barras de desplazamiento */
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #ffffff;
+            font-family: 'Arial Black', sans-serif;
+            overflow: hidden;
         }
 
         #subs-container {
@@ -22,58 +20,65 @@
         }
 
         #label {
-            font-size: 30px; /* Tamaño mediano para el título */
-            color: #000000; /* Letras negras */
+            font-size: 30px;
+            color: #000000;
             text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 15px; /* Espacio con el nombre */
+            margin-bottom: 10px;
         }
 
         #latest-sub {
-            font-size: 80px; /* Tamaño GRANDE para el nombre */
-            color: #000000; /* Letras negras */
-            word-wrap: break-word;
-            max-width: 90vw; /* Asegura que no se corte en pantallas pequeñas */
+            font-size: 100px; /* Tamaño grande para que se vea bien */
+            color: #000000;
         }
     </style>
 </head>
 <body>
     <div id="subs-container">
-        <div id="label">ÚLTIMO SUSCRIPTOR:</div>
-        <div id="latest-sub">Cargando...</div>
+        <div id="label">ÚLTIMO SUSCRIPTOR PÚBLICO:</div>
+        <div id="latest-sub">Buscando...</div>
     </div>
 
     <script>
         const API_KEY = 'AIzaSyAJlEWiaZ_T1A-1YqSc6RR8tmrwqcfVQ24';
-        const CHANNEL_ID = 'UC8xMsUuBgl_IK37ZgB8vJ_Q'; // ID de MusguitoMC
+        const CHANNEL_ID = 'UC8xMsUuBgl_IK37ZgB8vJ_Q';
+        const MI_NOMBRE = 'MusguitoMC'; // Filtro para no aparecer tú mismo
 
         async function getLatestSub() {
-            // URL corregida para pedir específicamente la lista de suscriptores
-            const url = `https://www.googleapis.com/youtube/v3/subscriptions?part=snippet&channelId=${CHANNEL_ID}&order=relevance&maxResults=1&key=${API_KEY}`;
+            // Pedimos los últimos 5 suscriptores para tener margen de filtrado
+            const url = `https://www.googleapis.com/youtube/v3/subscriptions?part=snippet&channelId=${CHANNEL_ID}&order=relevance&maxResults=5&key=${API_KEY}`;
 
             try {
                 const response = await fetch(url);
                 const data = await response.json();
 
-                // Verificamos si hay suscriptores públicos visibles
                 if (data.items && data.items.length > 0) {
-                    const subscriberName = data.items[0].snippet.title;
-                    document.getElementById('latest-sub').innerText = subscriberName;
+                    // Buscamos en la lista el primero que NO seas tú
+                    let foundUser = null;
+                    for (let item of data.items) {
+                        let name = item.snippet.title;
+                        if (name.toLowerCase() !== MI_NOMBRE.toLowerCase()) {
+                            foundUser = name;
+                            break; 
+                        }
+                    }
+
+                    if (foundUser) {
+                        document.getElementById('latest-sub').innerText = foundUser;
+                    } else {
+                        document.getElementById('latest-sub').innerText = "Esperando sub...";
+                    }
                 } else {
-                    // Si no hay suscriptores visibles, mostramos tu nombre de canal
-                    document.getElementById('latest-sub').innerText = "MusguitoMC"; 
+                    document.getElementById('latest-sub').innerText = "Esperando sub...";
                 }
             } catch (error) {
-                console.error("Error en la API:", error);
+                console.error("Error:", error);
                 document.getElementById('latest-sub').innerText = "ERROR API";
             }
         }
 
-        // Llamada inicial
         getLatestSub();
-
-        // Se actualiza cada 5 minutos (300000 ms) para no agotar tu cuota de API
-        setInterval(getLatestSub, 300000); 
+        // Actualiza cada 2 minutos para no saturar la API
+        setInterval(getLatestSub, 120000); 
     </script>
 </body>
 </html>
