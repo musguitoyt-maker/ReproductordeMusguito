@@ -15,7 +15,7 @@
         }
         #subs-container { text-align: center; }
         #label { font-size: 30px; color: #000000; text-transform: uppercase; margin-bottom: 10px; }
-        #latest-sub { font-size: 100px; color: #000000; }
+        #latest-sub { font-size: 90px; color: #000000; }
     </style>
 </head>
 <body>
@@ -27,47 +27,53 @@
     <script>
         const API_KEY = 'AIzaSyAJlEWiaZ_T1A-1YqSc6RR8tmrwqcfVQ24';
         const CHANNEL_ID = 'UC8xMsUuBgl_IK37ZgB8vJ_Q';
-        const MI_NOMBRE = 'MusguitoMC';
+        const MI_CANAL = 'MusguitoMC';
 
-        async function getLatestPublicSub() {
-            // Buscamos en las ACTIVIDADES (que es donde aparecen las suscripciones nuevas)
-            // Pedimos 50 resultados para asegurar que encontramos a alguien público
+        async function buscarUltimoPublico() {
+            // Pedimos los últimos 50 eventos para tener una base de datos grande donde buscar
             const url = `https://www.googleapis.com/youtube/v3/activities?part=snippet,contentDetails&channelId=${CHANNEL_ID}&maxResults=50&key=${API_KEY}`;
 
             try {
                 const response = await fetch(url);
                 const data = await response.json();
 
-                if (data.items) {
-                    // Filtramos la lista para encontrar solo suscripciones de otras personas
-                    const publicSub = data.items.find(item => {
-                        const type = item.snippet.type;
-                        const title = item.snippet.title;
-                        
-                        // Solo nos interesan las suscripciones
-                        const isSub = type === 'subscription' || title.toLowerCase().includes('subscribed to');
-                        // Que no sea tu propio nombre
-                        const isNotMe = !title.toLowerCase().includes(MI_NOMBRE.toLowerCase());
-                        
-                        return isSub && isNotMe;
-                    });
+                if (data.items && data.items.length > 0) {
+                    let encontrado = false;
 
-                    if (publicSub) {
-                        // Limpiamos el texto para que solo salga el nombre del usuario
-                        let rawName = publicSub.snippet.title;
-                        let cleanName = rawName.split("subscribed to")[0].split("se ha suscrito a")[0].trim();
-                        document.getElementById('latest-sub').innerText = cleanName;
-                    } else {
-                        document.getElementById('latest-sub').innerText = "ESPERANDO PÚBLICO...";
+                    // RECORREMOS TODA LA LISTA (Aquí está la clave)
+                    for (let i = 0; i < data.items.length; i++) {
+                        const item = data.items[i];
+                        const snippet = item.snippet;
+                        const titulo = snippet.title;
+
+                        // Verificamos que sea una suscripción y que NO seas tú
+                        const esSuscripcion = snippet.type === 'subscription' || titulo.toLowerCase().includes('subscribed');
+                        const noSoyYo = !titulo.toLowerCase().includes(MI_CANAL.toLowerCase());
+
+                        if (esSuscripcion && noSoyYo) {
+                            // ¡ENCONTRADO! Limpiamos el nombre y lo mostramos
+                            let nombreLimpio = titulo.split("subscribed")[0].split("se ha suscrito")[0].trim();
+                            document.getElementById('latest-sub').innerText = nombreLimpio;
+                            encontrado = true;
+                            break; // Salimos del bucle porque ya tenemos al más reciente
+                        }
+                    }
+
+                    if (!encontrado) {
+                        document.getElementById('latest-sub').innerText = "SIN SUBS PÚBLICOS";
                     }
                 }
             } catch (error) {
                 console.error("Error:", error);
+                document.getElementById('latest-sub').innerText = "ERROR DE CONEXIÓN";
             }
         }
 
-        getLatestPublicSub();
-        setInterval(getLatestPublicSub, 60000); // Revisa cada minuto
+        // Ejecutar búsqueda
+        buscarUltimoPublico();
+        
+        // Revisar cada 2 minutos para no quemar la API
+        setInterval(buscarUltimoPublico, 120000);
     </script>
 </body>
 </html>
