@@ -5,7 +5,6 @@
     <style>
         body {
             margin: 0;
-            padding: 0;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -14,71 +13,61 @@
             font-family: 'Arial Black', sans-serif;
             overflow: hidden;
         }
-
-        #subs-container {
-            text-align: center;
-        }
-
-        #label {
-            font-size: 30px;
-            color: #000000;
-            text-transform: uppercase;
-            margin-bottom: 10px;
-        }
-
-        #latest-sub {
-            font-size: 100px; /* Tamaño grande para que se vea bien */
-            color: #000000;
-        }
+        #subs-container { text-align: center; }
+        #label { font-size: 30px; color: #000000; text-transform: uppercase; margin-bottom: 10px; }
+        #latest-sub { font-size: 100px; color: #000000; }
     </style>
 </head>
 <body>
     <div id="subs-container">
         <div id="label">ÚLTIMO SUSCRIPTOR PÚBLICO:</div>
-        <div id="latest-sub">Buscando...</div>
+        <div id="latest-sub">BUSCANDO...</div>
     </div>
 
     <script>
         const API_KEY = 'AIzaSyAJlEWiaZ_T1A-1YqSc6RR8tmrwqcfVQ24';
         const CHANNEL_ID = 'UC8xMsUuBgl_IK37ZgB8vJ_Q';
-        const MI_NOMBRE = 'MusguitoMC'; // Filtro para no aparecer tú mismo
+        const MI_NOMBRE = 'MusguitoMC';
 
-        async function getLatestSub() {
-            // Pedimos los últimos 5 suscriptores para tener margen de filtrado
-            const url = `https://www.googleapis.com/youtube/v3/subscriptions?part=snippet&channelId=${CHANNEL_ID}&order=relevance&maxResults=5&key=${API_KEY}`;
+        async function getLatestPublicSub() {
+            // Buscamos en las ACTIVIDADES (que es donde aparecen las suscripciones nuevas)
+            // Pedimos 50 resultados para asegurar que encontramos a alguien público
+            const url = `https://www.googleapis.com/youtube/v3/activities?part=snippet,contentDetails&channelId=${CHANNEL_ID}&maxResults=50&key=${API_KEY}`;
 
             try {
                 const response = await fetch(url);
                 const data = await response.json();
 
-                if (data.items && data.items.length > 0) {
-                    // Buscamos en la lista el primero que NO seas tú
-                    let foundUser = null;
-                    for (let item of data.items) {
-                        let name = item.snippet.title;
-                        if (name.toLowerCase() !== MI_NOMBRE.toLowerCase()) {
-                            foundUser = name;
-                            break; 
-                        }
-                    }
+                if (data.items) {
+                    // Filtramos la lista para encontrar solo suscripciones de otras personas
+                    const publicSub = data.items.find(item => {
+                        const type = item.snippet.type;
+                        const title = item.snippet.title;
+                        
+                        // Solo nos interesan las suscripciones
+                        const isSub = type === 'subscription' || title.toLowerCase().includes('subscribed to');
+                        // Que no sea tu propio nombre
+                        const isNotMe = !title.toLowerCase().includes(MI_NOMBRE.toLowerCase());
+                        
+                        return isSub && isNotMe;
+                    });
 
-                    if (foundUser) {
-                        document.getElementById('latest-sub').innerText = foundUser;
+                    if (publicSub) {
+                        // Limpiamos el texto para que solo salga el nombre del usuario
+                        let rawName = publicSub.snippet.title;
+                        let cleanName = rawName.split("subscribed to")[0].split("se ha suscrito a")[0].trim();
+                        document.getElementById('latest-sub').innerText = cleanName;
                     } else {
-                        document.getElementById('latest-sub').innerText = "Esperando sub...";
+                        document.getElementById('latest-sub').innerText = "ESPERANDO PÚBLICO...";
                     }
-                } else {
-                    document.getElementById('latest-sub').innerText = "Esperando sub...";
                 }
             } catch (error) {
                 console.error("Error:", error);
-                document.getElementById('latest-sub').innerText = "ERROR API";
             }
         }
 
-        getLatestSub();
-        // Actualiza cada 2 minutos para no saturar la API
-        setInterval(getLatestSub, 120000); 
+        getLatestPublicSub();
+        setInterval(getLatestPublicSub, 60000); // Revisa cada minuto
     </script>
 </body>
 </html>
