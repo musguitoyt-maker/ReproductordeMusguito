@@ -13,67 +13,79 @@
             font-family: 'Arial Black', sans-serif;
             overflow: hidden;
         }
-        #subs-container { text-align: center; }
-        #label { font-size: 30px; color: #000000; text-transform: uppercase; margin-bottom: 10px; }
-        #latest-sub { font-size: 90px; color: #000000; }
+
+        #container {
+            text-align: center;
+        }
+
+        #label {
+            font-size: 25px;
+            color: #333;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: -10px;
+        }
+
+        #count {
+            font-size: 150px;
+            color: #000000;
+            transition: all 0.3s ease;
+        }
+
+        /* Animación cuando sube el número */
+        .update-anim {
+            animation: pulse 0.6s ease-in-out;
+            color: #00ff00 !important; /* Brillo verde al subir */
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
     </style>
 </head>
 <body>
-    <div id="subs-container">
-        <div id="label">ÚLTIMO SUSCRIPTOR PÚBLICO:</div>
-        <div id="latest-sub">BUSCANDO...</div>
+
+    <div id="container">
+        <div id="label">Suscriptores en vivo:</div>
+        <div id="count">0</div>
     </div>
 
     <script>
         const API_KEY = 'AIzaSyAJlEWiaZ_T1A-1YqSc6RR8tmrwqcfVQ24';
         const CHANNEL_ID = 'UC8xMsUuBgl_IK37ZgB8vJ_Q';
-        const MI_CANAL = 'MusguitoMC';
+        let lastCount = 0;
 
-        async function buscarUltimoPublico() {
-            // Pedimos los últimos 50 eventos para tener una base de datos grande donde buscar
-            const url = `https://www.googleapis.com/youtube/v3/activities?part=snippet,contentDetails&channelId=${CHANNEL_ID}&maxResults=50&key=${API_KEY}`;
+        async function updateCounter() {
+            // Este endpoint pide las estadísticas generales (vistas, subs, videos)
+            const url = `https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${CHANNEL_ID}&key=${API_KEY}`;
 
             try {
                 const response = await fetch(url);
                 const data = await response.json();
 
                 if (data.items && data.items.length > 0) {
-                    let encontrado = false;
+                    const currentCount = parseInt(data.items[0].statistics.subscriberCount);
+                    const display = document.getElementById('count');
 
-                    // RECORREMOS TODA LA LISTA (Aquí está la clave)
-                    for (let i = 0; i < data.items.length; i++) {
-                        const item = data.items[i];
-                        const snippet = item.snippet;
-                        const titulo = snippet.title;
-
-                        // Verificamos que sea una suscripción y que NO seas tú
-                        const esSuscripcion = snippet.type === 'subscription' || titulo.toLowerCase().includes('subscribed');
-                        const noSoyYo = !titulo.toLowerCase().includes(MI_CANAL.toLowerCase());
-
-                        if (esSuscripcion && noSoyYo) {
-                            // ¡ENCONTRADO! Limpiamos el nombre y lo mostramos
-                            let nombreLimpio = titulo.split("subscribed")[0].split("se ha suscrito")[0].trim();
-                            document.getElementById('latest-sub').innerText = nombreLimpio;
-                            encontrado = true;
-                            break; // Salimos del bucle porque ya tenemos al más reciente
-                        }
+                    // Si el número cambió, activamos la animación
+                    if (lastCount !== 0 && currentCount !== lastCount) {
+                        display.classList.add('update-anim');
+                        setTimeout(() => display.classList.remove('update-anim'), 600);
                     }
 
-                    if (!encontrado) {
-                        document.getElementById('latest-sub').innerText = "SIN SUBS PÚBLICOS";
-                    }
+                    display.innerText = currentCount.toLocaleString(); // Pone puntos de miles
+                    lastCount = currentCount;
                 }
             } catch (error) {
                 console.error("Error:", error);
-                document.getElementById('latest-sub').innerText = "ERROR DE CONEXIÓN";
             }
         }
 
-        // Ejecutar búsqueda
-        buscarUltimoPublico();
-        
-        // Revisar cada 2 minutos para no quemar la API
-        setInterval(buscarUltimoPublico, 120000);
+        // Actualiza cada 30 segundos (YouTube no actualiza este dato más rápido que eso)
+        updateCounter();
+        setInterval(updateCounter, 30000); 
     </script>
 </body>
 </html>
