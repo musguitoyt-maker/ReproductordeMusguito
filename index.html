@@ -2,51 +2,88 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SISTEMA OPERACIÓN 100K</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; overflow: hidden; background-color: black; }
-        body, html { width: 100%; height: 100%; }
-        video { width: 100vw; height: 100vh; object-fit: cover; }
+        /* Estética minimalista y profesional para el directo */
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: transparent; /* Transparente para OBS */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+
+        .sub-card {
+            background: rgba(15, 15, 15, 0.85); /* Fondo oscuro premium */
+            border: 3px solid #00ffff; /* Borde cian neón */
+            border-radius: 15px;
+            padding: 30px 60px;
+            text-align: center;
+            box-shadow: 0 0 25px rgba(0, 255, 255, 0.4);
+            min-width: 400px;
+        }
+
+        .label {
+            color: #ffffff;
+            font-size: 20px;
+            letter-spacing: 4px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            opacity: 0.8;
+        }
+
+        .subscriber-name {
+            color: #00ffff;
+            font-size: 65px;
+            font-weight: 900;
+            text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.5);
+            word-wrap: break-word;
+        }
     </style>
 </head>
 <body>
 
-    <video id="loopVideo" autoplay loop playsinline>
-        <source src="https://www.dropbox.com/scl/fi/uq6r5hjpeefwlg0qqj3e0/lv_0_20260417155001.mp4?rlkey=4lg4kf0ut0en9i24nm9qdo79u&st=s8le6pmo&raw=1" type="video/mp4">
-    </video>
+    <div class="sub-card">
+        <div class="label">Último Suscriptor</div>
+        <div id="latest-sub" class="subscriber-name">CARGANDO...</div>
+    </div>
 
     <script>
-        const video = document.getElementById('loopVideo');
+        const API_KEY = 'AIzaSyAJlEWiaZ_T1A-1YqSc6RR8tmrwqcfVQ24';
+        const CHANNEL_ID = 'UC8xMsUuBgl_IK37ZgB8vJ_Q';
 
-        // FUERZA BRUTA DE AUDIO
-        function activarAudio() {
-            video.muted = false;
-            video.volume = 1.0;
-            let playPromise = video.play();
+        async function fetchLatestSubscriber() {
+            // URL para obtener las actividades de suscripción del canal
+            const url = `https://www.googleapis.com/youtube/v3/activities?part=snippet,contentDetails&channelId=${CHANNEL_ID}&maxResults=1&type=subscription&key=${API_KEY}`;
 
-            if (playPromise !== undefined) {
-                playPromise.then(_ => {
-                    console.log("LOGRADO");
-                }).catch(error => {
-                    // Si falla, lo silencia y lo vuelve a intentar en 100ms
-                    video.muted = true;
-                    video.play();
-                    setTimeout(() => { activarAudio(); }, 100);
-                });
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.items && data.items.length > 0) {
+                    // Limpiamos el texto que devuelve la API para que solo salga el nombre
+                    let rawName = data.items[0].snippet.title;
+                    let cleanName = rawName.replace("subscribed to", "").replace("se ha suscrito a", "").trim();
+                    
+                    document.getElementById('latest-sub').innerText = cleanName;
+                } else {
+                    // Si no hay suscriptores recientes visibles (por privacidad de los usuarios)
+                    document.getElementById('latest-sub').innerText = "MusguitoMC";
+                }
+            } catch (error) {
+                console.error("Error en la API:", error);
+                document.getElementById('latest-sub').innerText = "ERROR";
             }
         }
 
-        // Intento de arranque agresivo
-        window.addEventListener('DOMContentLoaded', activarAudio);
-        window.addEventListener('load', activarAudio);
-        
-        // El truco final: intentar desmutear cada vez que el video hace loop
-        video.onplay = () => {
-            setTimeout(() => { 
-                video.muted = false; 
-            }, 500);
-        };
+        // Actualización inicial
+        fetchLatestSubscriber();
+
+        // Se actualiza automáticamente cada 60 segundos (1 minuto)
+        setInterval(fetchLatestSubscriber, 60000);
     </script>
 </body>
 </html>
